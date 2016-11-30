@@ -69,8 +69,11 @@ def build_feature(contentX):
 def save_result(index, fname, precision, f1, recall):
     fout = open(fname, 'a')
     fout.write("%d\t" %index)
+    print precision
     class0 = "%f\t%f\t%f\t" %(precision[0], recall[0], f1[0])
     class1 = "%f\t%f\t%f\n" %(precision[1], recall[1], f1[1])
+    print class0
+    print class1
     fout.write(class0)
     fout.write(class1)
     fout.close()
@@ -106,11 +109,11 @@ def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weigh
     print 'Size of fea_train:' + repr(X_train.shape)
     print "build feature end"
     predict_y = train_and_predict(clf, X_train, trainY, X_test)
-    precision = precision_score(testY, predict_y)
+    precision = precision_score(testY, predict_y, average=None)
     #print testY[:10]
     #print predict_y[:10]
-    f1 = f1_score(testY, predict_y)
-    recall = recall_score(testY, predict_y)
+    f1 = f1_score(testY, predict_y, average=None)
+    recall = recall_score(testY, predict_y, average=None)
     save_result(index, fname, precision, f1, recall)
     class_metrics(predict_y, testY)
     del decompose
