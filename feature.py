@@ -50,8 +50,12 @@ def build_chinese_rate(sentence):
             hanzi_count += 1
     return 1 - float(hanzi_count)/len(sentence)
 
-def build_x_num(sentence):
-    pass
+def cut_word(X):
+    res = []
+    for x in X:
+        rs = util.basic_tokenizer(x)
+        res.append('\t'.join(rs))
+    return res
 
 
 def build_feature(contentX):
@@ -78,6 +82,16 @@ def save_result(index, fname, precision, f1, recall):
     fout.write(class1)
     fout.close()
 
+def save_feature(X, Y, fname):
+    fout = open(fname, 'w')
+    for i in range(len(X)):
+        s = ''
+        for x in X[i]:
+            s += str(x) + ' '
+        s += str(Y[i])
+        fout.write(s + '\n')
+    fout.close()
+
 def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weight_dict, dec_name, dimension, index, fname):
     clf = None
     if model_name == 'K':
@@ -100,6 +114,9 @@ def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weigh
     X_test = decompose.transform(testX)
     X_train = np.hstack((X_train, train_add_X))
     X_test = np.hstack((X_test, test_add_X))
+    save_feature(X_train, trainY, "train.feature")
+    save_feature(X_test, testY, 'test.feature')
+    #sys.exit(-1)
     #X_train = scipy.sparse.hstack((X_train, train_add_X))
     #X_test = scipy.sparse.hstack((X_test, test_add_X))
     #X_train = train_add_X
@@ -123,17 +140,17 @@ def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weigh
     gc.collect()
 
 
-def feature_collection():
+def feature_collection(label_list, content_list):
     stop_word = util.load_stop_word()
-    #print "start split cross value"
-    #trainX, testX, trainY, testY = train_test_split(content_list, label_list, test_size=0.4, random_state=0)
-    #trainX = cut_word(trainX)
-    #testX = cut_word(testX)
+    print "start split cross value"
+    trainX, testX, trainY, testY = train_test_split(content_list, label_list, test_size=0.4, random_state=0)
+    trainX = cut_word(trainX)
+    testX = cut_word(testX)
     #util.save_word_seg(trainX, trainY, "word_seg.train")
     #util.save_word_seg(testX, testY, "word_seg.test")
     #sys.exit(-1)
-    trainX, trainY = util.load_word_seg("word_seg.train")
-    testX, testY = util.load_word_seg("word_seg.test")
+    #trainX, trainY = util.load_word_seg("word_seg.train")
+    #testX, testY = util.load_word_seg("word_seg.test")
     trainY = np.array(trainY, dtype=np.int)
     testY = np.array(testY, dtype=np.int)
     print "build ex feature"
@@ -164,14 +181,16 @@ def load_stop_index(fname):
     return num
 
 if __name__=='__main__':
+    label_list, content_list = load_data(sys.argv[4])
     index = 0
     try:
         index = load_stop_index(sys.argv[3])
     except:
         index = 0
     para_list = load_parameter(sys.argv[1])
+    print para_list
     outfile = sys.argv[2]
-    trainX, train_add_X, trainY, testX, test_add_X, testY = feature_collection()
+    trainX, train_add_X, trainY, testX, test_add_X, testY = feature_collection(label_list, content_list)
     for i in range(index, len(para_list)):
         model_name = para_list[i][0]
         weight = int(para_list[i][1])
