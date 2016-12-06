@@ -45,10 +45,13 @@ def class_metrics(y_pred, y_true):
 
 def build_chinese_rate(sentence):
     hanzi_count = 0
+    total = 0
     for ch in sentence:
         if util.chinese_filter(ch):
             hanzi_count += 1
-    return 1 - float(hanzi_count)/len(sentence)
+        if ch != '\t':
+            total += 1
+    return 1 - float(hanzi_count)/total
 
 def cut_word(X):
     res = []
@@ -61,7 +64,10 @@ def cut_word(X):
 def build_feature(contentX):
     X = []
     for i in range(len(contentX)):
-        sentence = ' '.join(contentX[i])
+        #sentence = ' '.join(contentX[i])
+        sentence = contentX[i]
+        #print sentence
+        #num = sentence.count('\t')
         tmp_list = []
         tmp_list.append(math.log(len(sentence),2))
         tmp_list.append(build_chinese_rate(sentence))
@@ -116,6 +122,16 @@ def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weigh
     X_test = np.hstack((X_test, test_add_X))
     save_feature(X_train, trainY, "train.feature")
     save_feature(X_test, testY, 'test.feature')
+#debug
+    #trainY = np.hstack((trainY, testY))
+    #testY = trainY
+    #train_add_X = np.vstack((train_add_X, test_add_X))
+    #X_train = scipy.sparse.vstack((trainX, testX))
+    #decompose.fit(trainX)
+    #X_train = decompose.transform(trainX)
+    #X_train = np.hstack((X_train, train_add_X))
+    #X_test = X_train
+
     #sys.exit(-1)
     #X_train = scipy.sparse.hstack((X_train, train_add_X))
     #X_test = scipy.sparse.hstack((X_test, test_add_X))
@@ -123,16 +139,20 @@ def run(trainX, train_add_X, trainY, testX, test_add_X, testY, model_name, weigh
     #X_train = train_add_X
     #X_test = test_add_X
     print 'Size of fea_train:' + repr(X_train.shape)
-    print 'Size of fea_train:' + repr(X_train.shape)
+    print 'Size of fea_test:' + repr(X_test.shape)
     print "build feature end"
     predict_y = train_and_predict(clf, X_train, trainY, X_test)
     precision = precision_score(testY, predict_y, average=None)
+    #predict_y = train_and_predict(clf, X_train, trainY, X_train)
     #print testY[:10]
     #print predict_y[:10]
     f1 = f1_score(testY, predict_y, average=None)
     recall = recall_score(testY, predict_y, average=None)
     save_result(index, fname, precision, f1, recall)
     class_metrics(predict_y, testY)
+    #class_metrics(predict_y, trainY)
+    #util.save_model(clf, "model.plk")
+    #util.save_model(decompose, "decom.plk")
     del decompose
     del X_train
     del X_test
@@ -160,7 +180,10 @@ def feature_collection(label_list, content_list):
     test_add_X = build_feature(testX)
     print "build ex feature end"
     trainX, tv = util.build_tfidVector(stop_word, trainX, None)
-    testX, tv = util.build_tfidVector(stop_word, testX, tv.vocabulary_)
+    #util.save_vocabulary(tv, "vocabulary.pkl")
+    testX = tv.transform(testX)
+
+    #testX, tv = util.build_tfidVector(stop_word, testX, tv.vocabulary_)
     return trainX, train_add_X, trainY, testX, test_add_X, testY
 
 def load_parameter(fname):

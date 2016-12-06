@@ -1,5 +1,13 @@
 # WebData
 
+垃圾邮件分析
+运行命令
+python interface.py
+根据提示输入需要判断的文本
+系统会返回spam 或者unspam
+
+
+参数效果评估
 运行命令
 python feature.py 参数文件 输出文件 端点记录位置 输入文件
 

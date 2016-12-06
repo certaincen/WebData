@@ -3,6 +3,7 @@ from sklearn.cluster import KMeans
 import jieba
 import sys
 import re
+import pickle
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import NMF
 from sklearn.decomposition import LatentDirichletAllocation
@@ -66,7 +67,7 @@ def build_tfidVector(stop_word, data, vocabulary=None):
     #tv = TfidfVectorizer(sublinear_tf = False, stop_words = stop_word, \
     #                     tokenizer = chinese_tokenizer, vocabulary=vocabulary, token_pattern=u'^[\u4e00-\u9fa5]+$')
     tv = TfidfVectorizer(sublinear_tf = False, stop_words = stop_word, \
-                        vocabulary=vocabulary, min_df=1, max_df=0.6)
+                        vocabulary=vocabulary, min_df=1, max_df=0.8)
     tfidf_data = tv.fit_transform(data)
     #analyze = tv.build_analyzer()
     save_feature(tv.get_feature_names(), 'debug.txt')
@@ -95,6 +96,10 @@ def save_label(url_list, label_list, fname):
 
 def save_model(clf, outfile):
     joblib.dump(clf, outfile)
+
+def load_model(fname):
+    clf = joblib.load(fname)
+    return clf 
 
 def basic_tokenizer(line):
     seg_list = jieba.cut(line, cut_all=False)
@@ -126,3 +131,11 @@ def load_word_seg(fname):
         X_list.append('\t'.join(x).decode("gb18030"))
         y_list.append(y)
     return X_list, y_list
+
+def save_vocabulary(tv, fname):
+    with open(fname, 'wb') as handle:
+        pickle.dump(tv, handle)
+
+def load_vocabulary(fname):
+    tv = pickle.load(open(fname, 'rb'))
+    return tv
